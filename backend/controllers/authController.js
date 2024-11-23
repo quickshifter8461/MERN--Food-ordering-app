@@ -38,8 +38,13 @@ exports.login = async (req, res) => {
 
         // Generate JWT
         const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-        res.json({ token });
+        res.cookie('authToken', token, {
+            httpOnly: false, // Prevent client-side access to the cookie
+            secure: process.env.NODE_ENV === 'production', // Ensure the cookie is sent only over HTTPS in production
+            sameSite: 'strict', // Prevent CSRF attacks
+            maxAge: 60 * 60 * 1000 // Set expiry time to 1 hour
+        });
+        res.json({message: "Login successful" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

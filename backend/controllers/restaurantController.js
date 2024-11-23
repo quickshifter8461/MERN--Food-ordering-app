@@ -1,11 +1,15 @@
 const Restaurant = require("../models/restaurantModel");
+const MenuItem = require("../models/menuItemModel");
 
 exports.createRestaurant = async (req, res) => {
   try {
     const { name, location, cuisine } = req.body;
 
     // Create a new restaurant
-    const restaurant = new Restaurant({
+    let restaurant = await Restaurant.findOne({name})
+    if (restaurant) return res.status(400).json({ message: "Restaurant already exists" });
+    
+     restaurant = new Restaurant({
       name,
       location,
       cuisine,
@@ -30,7 +34,7 @@ exports.getRestaurants = async (req, res) => {
 
 exports.getRestaurantById = async (req, res) => {
   try {
-    const restaurant = await Restaurant.findById(req.params.restaurantId);
+    const restaurant = await Restaurant.findById(req.params.restaurantId).populate("menuItems");
     if (!restaurant)
       return res.status(404).json({ message: "Restaurant not found" });
 

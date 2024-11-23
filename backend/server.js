@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors"); // Import CORS
+const cookieParser = require("cookie-parser");
 const { PORT, connectDB } = require("./config/db");
 const authRoutes = require("./routes/auth");
 const restaurantRoutes = require("./routes/restaurant");
@@ -13,6 +14,7 @@ connectDB();
 app.use(cors());
 
 app.use(express.json());
+app.use(cookieParser())
 
 app.use("/api/auth", authRoutes);
 app.use("/api/restaurants", authMiddleware, restaurantRoutes);
