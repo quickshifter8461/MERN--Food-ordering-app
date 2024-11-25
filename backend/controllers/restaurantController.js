@@ -6,22 +6,25 @@ const cloudinaryInstance = require('../config/cloudinary')
 
 exports.createRestaurant = async (req, res) => {
   try {
-    const { name, location, cuisine, rating , status, contact } = req.body;
-
+    const { name, location, cuisine, rating, status, contact } = req.body;
     const existingRestaurant = await Restaurant.findOne({ name });
     if (existingRestaurant) {
       return res.status(400).json({ message: "Restaurant already exists" });
     }
-    const imageUploadResult = await cloudinaryInstance.uploader.upload(req.file.path);
+    let imageUrl = "https://cdn.prod.website-files.com/5f46c318c843828732a6f8e2/66b4beb879a502df90390196_digital-menu-board-free-templates.webp";
+    if (req.file) {
+      const uploadResponse = await cloudinaryInstance.uploader.upload(req.file.path);
+      imageUrl = uploadResponse.url;
+    }
     const restaurant = new Restaurant({
       name,
       location,
       cuisine,
-      rating, 
+      rating,
       status,
-      image: imageUploadResult.url,
+      image: imageUrl,
       contact,
-      owner: req.user.userId,
+      owner: req.user.userId, 
     });
     await restaurant.save();
     res.status(201).json({
@@ -29,15 +32,15 @@ exports.createRestaurant = async (req, res) => {
       restaurant,
     });
   } catch (error) {
-    
     res.status(500).json({ message: error.message });
   }
 };
 
 
+
 exports.getRestaurants = async (req, res) => {
   try {
-    const restaurants = await Restaurant.find();
+    const restaurants = await Restaurant.find().populate('owner').populate('menuItems');
     res.json(restaurants);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -46,16 +49,27 @@ exports.getRestaurants = async (req, res) => {
 
 exports.getRestaurantById = async (req, res) => {
   try {
-    const restaurant = await Restaurant.findById(req.params.restaurantId).populate("menuItems");
-    if (!restaurant)
+    const restaurant = await Restaurant.findById(req.params.restaurantId).populate('menuItems');
+    if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
-
+    }
     res.json(restaurant);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+exports.getRestaurantByName = async (req,res)=>{
+  try{
+    const name = req.params.name;
+    const restaurant = await Restaurant.find({ name: { $regex: name, $options: "i" } }).populate('menuItems');
+    if (!restaurant)
+      return res.status(404).json({ message: "Restaurant not found" });
+    res.json(restaurant);
+  }catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+} 
 exports.updateRestaurant = async (req, res) => {
   try {
 
@@ -71,18 +85,18 @@ exports.updateRestaurant = async (req, res) => {
     }
 
     if (req.file) {
-      const imageUploadResult = await cloudinary.uploader.upload(req.file.path);
+      const imageUploadResult = await cloudinaryInstance.uploader.upload(req.file.path);
       restaurant.image = imageUploadResult.url;
     }
 
-    const { name, address, description, contact, status, menuItems } = req.body;
+    const { name, address, description, contact, status } = req.body;
 
     if (name) restaurant.name = name;
     if (address) restaurant.address = address;
     if (description) restaurant.description = description;
     if (contact) restaurant.contact = contact;
     if (status) restaurant.status = status;
-    if (menuItems) restaurant.menuItems = menuItems;
+    
    
     await restaurant.save();
 

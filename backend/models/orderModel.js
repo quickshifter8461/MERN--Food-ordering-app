@@ -15,7 +15,7 @@ const orderSchema = new mongoose.Schema({
         state: String,
         zipCode: String
     },
-    coupon: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }, // optional coupon
+    coupon: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }, 
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });

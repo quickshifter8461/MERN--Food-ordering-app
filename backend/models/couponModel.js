@@ -5,9 +5,6 @@ const couponSchema = new mongoose.Schema({
   maxDiscountValue: { type: Number, required: true },
   minOrderValue: { type: Number, required: true },
   expiryDate: { type: Date, required: true },
-  applicableRestaurants: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" },
-  ],
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now },
 });

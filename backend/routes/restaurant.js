@@ -3,14 +3,16 @@ const {
   createRestaurant,
   getRestaurants,
   getRestaurantById,
+  getRestaurantByName,
   updateRestaurant,
   deleteRestaurant,
 } = require('../controllers/restaurantController');
 const {
   createMenuItem,
   getMenuItemsByRestaurant,
-  getMenuItemsByName,
+  searchMenuItemsByName,
   getMenuItemById,
+  searchMenuOfRestaurant,
   updateMenuItem,
   deleteMenuItem
 } = require('../controllers/menuController');
@@ -23,11 +25,12 @@ const router = express.Router();
 router.post('/', authMiddleware, roleMiddleware(['admin', 'restaurant manager']),upload.single("image"), createRestaurant);
 router.post('/:restaurantId/addMenu', authMiddleware, roleMiddleware(['admin','restaurant manager']), upload.single("image"), createMenuItem);
 
-router.get('/all-restaurants', getRestaurants);
-router.get('/:restaurantId', getRestaurantById);
-router.get('/:restaurantId/menu',getMenuItemsByRestaurant)
-router.get('/menu/:name',getMenuItemsByName)
-router.get('/:restaurantId/:menuItemId',getMenuItemById)
+// router.get('/all-restaurants', getRestaurants);
+// router.get('/:restaurantId', getRestaurantById);
+// router.get('/restaurant/:name', getRestaurantByName);
+// router.get('/:restaurantId/menu',getMenuItemsByRestaurant);
+router.get('/:restaurantId/:menuItemId',getMenuItemById);
+router.get('/:restaurantId/:name',searchMenuOfRestaurant);
 
 
 router.put('/:restaurantId', authMiddleware, roleMiddleware(['admin','restaurant manager']),upload.single("image"), updateRestaurant);

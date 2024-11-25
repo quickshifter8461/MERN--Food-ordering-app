@@ -1,100 +1,110 @@
 const MenuItem = require("../models/menuItemModel");
-const Restaurant = require("../models/restaurantModel")
-const User = require("../models/userModel")
+const Restaurant = require("../models/restaurantModel");
 const cloudinaryInstance = require("../config/cloudinary");
 const mongoose = require("mongoose");
 
 exports.createMenuItem = async (req, res) => {
   try {
-    const { name, price, category, isAvailable } = req.body;
+    const { name, price, category, isAvailable, description } = req.body;
     const restaurantId = req.params.restaurantId.trim();
-
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant) {
+      return res.status(404).json({ message: "Restaurant not found" });
+    }
     let imageUrl =
       "https://cdn.prod.website-files.com/5f46c318c843828732a6f8e2/66b4beb879a502df90390196_digital-menu-board-free-templates.webp";
-
     if (req.file) {
       const uploadResponse = await cloudinaryInstance.uploader.upload(
         req.file.path
       );
       imageUrl = uploadResponse.url;
     }
-
-    const menuItemIsExist = await MenuItem.findOne({
+    const menuItemExists = await MenuItem.findOne({
       restaurant: restaurantId,
       name: name,
     });
-    if (menuItemIsExist) {
+    if (menuItemExists) {
       return res.status(400).json({ message: "Menu item already exists" });
     }
-
     const menuItem = new MenuItem({
       name,
       price,
       category,
       restaurant: restaurantId,
       isAvailable,
+      description,
       image: imageUrl,
     });
-
     await menuItem.save();
-    res.status(201).json(menuItem);
+    restaurant.menuItems.push(menuItem._id);
+    await restaurant.save();
+    await restaurant.populate("menuItems");
+    res.status(201).json({
+      message: "Menu item created successfully",
+      menuItem
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 exports.getMenuItemsByRestaurant = async (req, res) => {
   try {
+    const restaurantId = req.params.restaurantId;
+    const restaurant = await Restaurant.findById(restaurantId)
+    if (!restaurant) {
+      return res.status(400).json({ message: "No restaurant found" });
+    }
+    const menuItems = await MenuItem.find({ restaurant: restaurantId });
+    res.status(200).json(menuItems);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+exports.searchMenuOfRestaurant = async (req,res)=>{
+  try{
     const menuItems = await MenuItem.find({
       restaurant: req.params.restaurantId,
+      name: { $regex: req.params.name, $options: "i" },
     });
-    res.json(menuItems);
-  } catch (error) {
+    res.status(200).json(menuItems)
+  }catch(error){
     res.status(500).json({ message: error.message });
   }
-};
-exports.getMenuItemById = async (req, res) => {
+}
+
+exports.searchMenuItemsByName = async (req,res)=>{
   try {
-    const { menuItemId, restaurantId } = req.params;
-    const menuItem = await MenuItem.findOne({
-      _id: menuItemId,
-      restaurant: restaurantId,
-    });
-
-    if (!menuItem) {
-      return res
-        .status(404)
-        .json({ message: "Menu item not found in the specified restaurant." });
-    }
-
-    res.json(menuItem);
+    const name = req.params.name
+    const menuItems = await MenuItem.find({name: {$regex: name, $options:'i'}})
+    res.status(200).json(menuItems)
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({message: error.message})
   }
-};
+}
 
-exports.getMenuItemsByName = async (req, res) => {
-  try {
-    const name = req.params.name; // Extract the search term from the request
-    const menuItems = await MenuItem.find({
-      name: { $regex: name, $options: "i" }, // Case-insensitive partial match
-    });
-
-    if (menuItems.length === 0) {
-      return res.status(404).json({ message: "No menu items found." });
-    }
-    res.json(menuItems);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+exports.getMenuItemById = async (req, res) =>{
+  try{
+    const restaurantId = req.params.restaurantId
+    const menuItemId =  req.params.menuItemId
+    const menuItem = await MenuItem.findById({restaurant: restaurantId,
+      _id: menuItemId
+    })
+    res.status(200).json(menuItem)
+  }catch(error){
+    res.status(500).json({message: error.message})
   }
-};
+}
 
 exports.updateMenuItem = async (req, res) => {
   try {
     const { menuItemId, restaurantId } = req.params;
-    const { name, price, category, isAvailable } = req.body;
+    const { name, price, category, isAvailable, description } = req.body;
 
-    let updateFields = { name, price, category, isAvailable };
+    let updateFields = { name, price, category, isAvailable, description };
 
     if (req.file) {
       const uploadResponse = await cloudinaryInstance.uploader.upload(
