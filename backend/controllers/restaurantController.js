@@ -1,27 +1,39 @@
 const Restaurant = require("../models/restaurantModel");
 const MenuItem = require("../models/menuItemModel");
 
+const cloudinaryInstance = require('../config/cloudinary')
+
+
 exports.createRestaurant = async (req, res) => {
   try {
-    const { name, location, cuisine } = req.body;
+    const { name, location, cuisine, rating , status, contact } = req.body;
 
-    // Create a new restaurant
-    let restaurant = await Restaurant.findOne({name})
-    if (restaurant) return res.status(400).json({ message: "Restaurant already exists" });
-    
-     restaurant = new Restaurant({
+    const existingRestaurant = await Restaurant.findOne({ name });
+    if (existingRestaurant) {
+      return res.status(400).json({ message: "Restaurant already exists" });
+    }
+    const imageUploadResult = await cloudinaryInstance.uploader.upload(req.file.path);
+    const restaurant = new Restaurant({
       name,
       location,
       cuisine,
+      rating, 
+      status,
+      image: imageUploadResult.url,
+      contact,
       owner: req.user.userId,
     });
     await restaurant.save();
-
-    res.status(201).json(restaurant);
+    res.status(201).json({
+      message: "Restaurant created successfully",
+      restaurant,
+    });
   } catch (error) {
+    
     res.status(500).json({ message: error.message });
   }
 };
+
 
 exports.getRestaurants = async (req, res) => {
   try {
@@ -46,34 +58,55 @@ exports.getRestaurantById = async (req, res) => {
 
 exports.updateRestaurant = async (req, res) => {
   try {
+
     const restaurant = await Restaurant.findById(req.params.restaurantId);
-    if (!restaurant)
+
+    if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
+    }
 
-    if (restaurant.owner.toString() !== req.user.userId)
+    
+    if (restaurant.owner.toString() !== req.user.userId) {
       return res.status(403).json({ message: "Unauthorized action" });
+    }
 
-    Object.assign(restaurant, req.body);
+    if (req.file) {
+      const imageUploadResult = await cloudinary.uploader.upload(req.file.path);
+      restaurant.image = imageUploadResult.url;
+    }
+
+    const { name, address, description, contact, status, menuItems } = req.body;
+
+    if (name) restaurant.name = name;
+    if (address) restaurant.address = address;
+    if (description) restaurant.description = description;
+    if (contact) restaurant.contact = contact;
+    if (status) restaurant.status = status;
+    if (menuItems) restaurant.menuItems = menuItems;
+   
     await restaurant.save();
-    res.json(restaurant);
+
+    res.status(200).json({
+      message: "Restaurant updated successfully",
+      restaurant,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+
 exports.deleteRestaurant = async (req, res) => {
     try {
-      // Find the restaurant by ID and check if it exists
       const restaurant = await Restaurant.findOne({
         _id: req.params.restaurantId,
-        owner: req.user.userId, // Match owner in the query to ensure authorization
+        owner: req.user.userId, 
       });
   
       if (!restaurant) {
         return res.status(404).json({ message: "Restaurant not found or unauthorized" });
       }
   
-      // Delete the restaurant
       await Restaurant.findByIdAndDelete(req.params.restaurantId);
       res.json({ message: "Restaurant deleted successfully" });
     } catch (error) {

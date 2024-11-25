@@ -2,23 +2,12 @@ const mongoose = require('mongoose');
 
 const restaurantSchema = new mongoose.Schema({
     name: { type: String, required: true },
-    address: {
-        street: String,
-        city: String,
-        state: String,
-        zipCode: String,
-        location: {
-            type: { type: String, enum: ['Point'] },
-            coordinates: { type: [Number] } // [longitude, latitude]
-        }
-    },
+    location: { type: String, required: true},
     cuisine: { type: String, required: true },
     rating: { type: Number, default: 0 },
+    image:{type: String, default:"https://www.allseasonsluxuryproperties.com/images/Food/ff3b9c03-1342-4b6e-9636-93f91b60002e.webp" },
     menuItems: [{ type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem' }],
-    contact: {
-        phone: String,
-        email: String
-    },
+    contact: {type: String},
     status: {
         type: String,
         enum: ['open', 'closed'],

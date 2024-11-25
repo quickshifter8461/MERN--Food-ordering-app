@@ -9,27 +9,30 @@ const {
 const {
   createMenuItem,
   getMenuItemsByRestaurant,
+  getMenuItemsByName,
+  getMenuItemById,
+  updateMenuItem,
+  deleteMenuItem
 } = require('../controllers/menuController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
-
+const {upload} = require('../middlewares/multer');
 const router = express.Router();
 
-// Only 'admin' and 'restaurant manager' can create a restaurant
-router.post('/', authMiddleware, roleMiddleware(['admin', 'restaurant manager']), createRestaurant);
 
-// Only 'restaurant manager' can add menu items to a restaurant
-router.post('/:restaurantId/addMenu', authMiddleware, roleMiddleware(['admin','restaurant manager']), createMenuItem);
+router.post('/', authMiddleware, roleMiddleware(['admin', 'restaurant manager']),upload.single("image"), createRestaurant);
+router.post('/:restaurantId/addMenu', authMiddleware, roleMiddleware(['admin','restaurant manager']), upload.single("image"), createMenuItem);
 
-// Anyone can view restaurants
-router.get('/', getRestaurants);
+router.get('/all-restaurants', getRestaurants);
 router.get('/:restaurantId', getRestaurantById);
+router.get('/:restaurantId/menu',getMenuItemsByRestaurant)
+router.get('/menu/:name',getMenuItemsByName)
+router.get('/:restaurantId/:menuItemId',getMenuItemById)
 
 
-// Only 'restaurant manager' can update a restaurant
-router.patch('/:restaurantId', authMiddleware, roleMiddleware(['admin','restaurant manager']), updateRestaurant);
+router.put('/:restaurantId', authMiddleware, roleMiddleware(['admin','restaurant manager']),upload.single("image"), updateRestaurant);
+router.put('/menuitems/:restaurantId/:menuItemId',authMiddleware, roleMiddleware(["admin","restaurant manager"]),upload.single("image"), updateMenuItem);
 
-// Only 'admin' can delete a restaurant
 router.delete('/:restaurantId', authMiddleware, roleMiddleware(['admin']), deleteRestaurant);
-
+router.delete('/menuitems/:restaurantId/:menuItemId', authMiddleware, roleMiddleware(['admin','restaurant manager']), deleteMenuItem)
 module.exports = router;
