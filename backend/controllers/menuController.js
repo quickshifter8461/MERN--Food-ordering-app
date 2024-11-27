@@ -1,7 +1,7 @@
 const MenuItem = require("../models/menuItemModel");
 const Restaurant = require("../models/restaurantModel");
 const cloudinaryInstance = require("../config/cloudinary");
-const mongoose = require("mongoose");
+
 
 exports.createMenuItem = async (req, res) => {
   try {
@@ -63,13 +63,12 @@ exports.getMenuItemsByRestaurant = async (req, res) => {
   }
 };
 
-
 exports.searchMenuOfRestaurant = async (req,res)=>{
   try{
     const menuItems = await MenuItem.find({
       restaurant: req.params.restaurantId,
       name: { $regex: req.params.name, $options: "i" },
-    });
+    })
     res.status(200).json(menuItems)
   }catch(error){
     res.status(500).json({ message: error.message });
@@ -135,7 +134,6 @@ exports.deleteMenuItem = async (req, res) => {
     if(!menuItemId){
       return res.status(400).json({ message: "Menu item ID is required" });
     }
-
     const deleteMenuItem = await MenuItem.findByIdAndDelete({
       _id: menuItemId,
       restaurant: restaurantId,

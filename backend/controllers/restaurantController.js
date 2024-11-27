@@ -39,7 +39,10 @@ exports.createRestaurant = async (req, res) => {
 exports.getRestaurants = async (req, res) => {
   try {
     const restaurants = await Restaurant.find().populate('owner',"name").populate('menuItems','name');
-    res.json(restaurants);
+    if(restaurants.length===0){
+      return res.status(404).json({message: "No restaurants Found"})
+    }
+    res.status(200).json(restaurants);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -117,6 +120,7 @@ exports.deleteRestaurant = async (req, res) => {
       if (!restaurant) {
         return res.status(404).json({ message: "Restaurant not found or unauthorized" });
       }
+      await MenuItem.deleteMany({_id: {$in: restaurant.menuItems}})
       res.json({ message: "Restaurant deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: error.message });

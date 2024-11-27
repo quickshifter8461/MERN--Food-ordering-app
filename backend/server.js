@@ -6,7 +6,7 @@ const authRoutes = require("./routes/auth");
 const restaurantRoutes = require("./routes/restaurant");
 const authMiddleware = require("./middlewares/authMiddleware");
 const cartRoutes = require("./routes/cartRouter")
-const roleMiddleware = require("./middlewares/roleMiddleware");
+const couponRoutes = require("./routes/couponRoutes")
 
 const app = express();
 
@@ -20,7 +20,7 @@ app.use(cookieParser())
 app.use("/api/auth", authRoutes);
 app.use("/api/restaurants", authMiddleware, restaurantRoutes);
 app.use("/api/cart",authMiddleware, cartRoutes)
-
+app.use("/api/coupon",authMiddleware, couponRoutes)
 app.get("/", (req, res) => {
   res.send("API running...");
 });
