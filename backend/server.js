@@ -5,6 +5,7 @@ const { PORT, connectDB } = require("./config/db");
 const authRoutes = require("./routes/auth");
 const restaurantRoutes = require("./routes/restaurant");
 const authMiddleware = require("./middlewares/authMiddleware");
+const cartRoutes = require("./routes/cartRouter")
 const roleMiddleware = require("./middlewares/roleMiddleware");
 
 const app = express();
@@ -18,6 +19,7 @@ app.use(cookieParser())
 
 app.use("/api/auth", authRoutes);
 app.use("/api/restaurants", authMiddleware, restaurantRoutes);
+app.use("/api/cart",authMiddleware, cartRoutes)
 
 app.get("/", (req, res) => {
   res.send("API running...");

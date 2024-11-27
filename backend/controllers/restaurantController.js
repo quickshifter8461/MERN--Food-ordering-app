@@ -1,9 +1,6 @@
 const Restaurant = require("../models/restaurantModel");
 const MenuItem = require("../models/menuItemModel");
-
 const cloudinaryInstance = require('../config/cloudinary')
-
-
 exports.createRestaurant = async (req, res) => {
   try {
     const { name, location, cuisine, rating, status, contact } = req.body;
@@ -11,7 +8,7 @@ exports.createRestaurant = async (req, res) => {
     if (existingRestaurant) {
       return res.status(400).json({ message: "Restaurant already exists" });
     }
-    let imageUrl = "https://cdn.prod.website-files.com/5f46c318c843828732a6f8e2/66b4beb879a502df90390196_digital-menu-board-free-templates.webp";
+    let imageUrl 
     if (req.file) {
       const uploadResponse = await cloudinaryInstance.uploader.upload(req.file.path);
       imageUrl = uploadResponse.url;
@@ -27,6 +24,7 @@ exports.createRestaurant = async (req, res) => {
       owner: req.user.userId, 
     });
     await restaurant.save();
+    await restaurant.populate("owner","name")
     res.status(201).json({
       message: "Restaurant created successfully",
       restaurant,
@@ -40,7 +38,7 @@ exports.createRestaurant = async (req, res) => {
 
 exports.getRestaurants = async (req, res) => {
   try {
-    const restaurants = await Restaurant.find().populate('owner').populate('menuItems');
+    const restaurants = await Restaurant.find().populate('owner',"name").populate('menuItems','name');
     res.json(restaurants);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -49,7 +47,7 @@ exports.getRestaurants = async (req, res) => {
 
 exports.getRestaurantById = async (req, res) => {
   try {
-    const restaurant = await Restaurant.findById(req.params.restaurantId).populate('menuItems');
+    const restaurant = await Restaurant.findById(req.params.restaurantId).populate('menuItems',"name");
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
@@ -62,7 +60,7 @@ exports.getRestaurantById = async (req, res) => {
 exports.getRestaurantByName = async (req,res)=>{
   try{
     const name = req.params.name;
-    const restaurant = await Restaurant.find({ name: { $regex: name, $options: "i" } }).populate('menuItems');
+    const restaurant = await Restaurant.find({ name: { $regex: name, $options: "i" } }).populate('menuItems',"name");
     if (!restaurant)
       return res.status(404).json({ message: "Restaurant not found" });
     res.json(restaurant);
@@ -72,32 +70,34 @@ exports.getRestaurantByName = async (req,res)=>{
 } 
 exports.updateRestaurant = async (req, res) => {
   try {
-
+    // Fetch the restaurant by ID
     const restaurant = await Restaurant.findById(req.params.restaurantId);
-
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
 
-    
+    // Check if the user is authorized to update
     if (restaurant.owner.toString() !== req.user.userId) {
       return res.status(403).json({ message: "Unauthorized action" });
     }
 
+    // Handle image update if `req.file` exists
     if (req.file) {
       const imageUploadResult = await cloudinaryInstance.uploader.upload(req.file.path);
       restaurant.image = imageUploadResult.url;
     }
 
+    // Destructure other fields from `req.body`
     const { name, address, description, contact, status } = req.body;
 
+    // Update only provided fields
     if (name) restaurant.name = name;
     if (address) restaurant.address = address;
     if (description) restaurant.description = description;
     if (contact) restaurant.contact = contact;
     if (status) restaurant.status = status;
-    
-   
+
+    // Save the updated restaurant
     await restaurant.save();
 
     res.status(200).json({
@@ -110,18 +110,13 @@ exports.updateRestaurant = async (req, res) => {
 };
 
 
+
 exports.deleteRestaurant = async (req, res) => {
     try {
-      const restaurant = await Restaurant.findOne({
-        _id: req.params.restaurantId,
-        owner: req.user.userId, 
-      });
-  
+      const restaurant = await Restaurant.findByIdAndDelete(req.params.restaurantId);
       if (!restaurant) {
         return res.status(404).json({ message: "Restaurant not found or unauthorized" });
       }
-  
-      await Restaurant.findByIdAndDelete(req.params.restaurantId);
       res.json({ message: "Restaurant deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: error.message });

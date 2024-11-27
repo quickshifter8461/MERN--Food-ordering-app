@@ -3,7 +3,7 @@ const User = require('../models/userModel')
 exports.addAddress = async (req, res) => {
   try {
     const { street, city, state, postalCode, name } = req.body;
-
+    const user = await User.findById(req.user.userId)
     const addressExists = await Address.findOne({ 
       user: req.user.userId,
       name: name
@@ -22,6 +22,9 @@ exports.addAddress = async (req, res) => {
       user: req.user.userId,
     });
     await address.save();
+    user.address.push(address._id)
+    await user.save()
+    await user.populate('address')
     res.status(201).json({
       message: "Address saved successfully",
       address: address,
@@ -33,7 +36,7 @@ exports.addAddress = async (req, res) => {
 
 exports.getAddresses = async (req, res) => {
   try {
-    const addresses = await Address.find({ user: req.user.userId }).populate("user");
+    const addresses = await Address.find({ user: req.user.userId }).populate("user","name");
     res.status(200).json(addresses);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -46,8 +49,11 @@ exports.getAddressById = async (req, res) => {
     const address = await Address.findById({
       user: req.user.userId,
       _id: addressId,
-    }).populate("user");
-    res.status(200).json(address);
+    }).populate("user","name");
+    if(!address){
+     return res.status(404).json({message: "Address not found"})
+    }
+      res.status(200).json(address);
   } catch (error) {
     res.status(500).json({ Message: error.message });
   }
@@ -62,7 +68,7 @@ exports.updateAddress = async (req, res) => {
       _id: addressId,
     });
     if (!address) {
-      res.status(404).json({ message: "Address not found" });
+     return res.status(404).json({ message: "Address not found" });
     }
     if (street) address.street = street;
     if (city) address.city = city;

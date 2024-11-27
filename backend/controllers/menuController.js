@@ -11,8 +11,7 @@ exports.createMenuItem = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
-    let imageUrl =
-      "https://cdn.prod.website-files.com/5f46c318c843828732a6f8e2/66b4beb879a502df90390196_digital-menu-board-free-templates.webp";
+    let imageUrl 
     if (req.file) {
       const uploadResponse = await cloudinaryInstance.uploader.upload(
         req.file.path
@@ -36,6 +35,7 @@ exports.createMenuItem = async (req, res) => {
       image: imageUrl,
     });
     await menuItem.save();
+    await menuItem.populate("restaurant", "name")
     restaurant.menuItems.push(menuItem._id);
     await restaurant.save();
     await restaurant.populate("menuItems");
@@ -93,6 +93,9 @@ exports.getMenuItemById = async (req, res) =>{
     const menuItem = await MenuItem.findById({restaurant: restaurantId,
       _id: menuItemId
     })
+    if(!menuItem){
+      return res.status(404).json({message: "Item not found"})
+    }
     res.status(200).json(menuItem)
   }catch(error){
     res.status(500).json({message: error.message})
@@ -103,28 +106,23 @@ exports.updateMenuItem = async (req, res) => {
   try {
     const { menuItemId, restaurantId } = req.params;
     const { name, price, category, isAvailable, description } = req.body;
-
-    let updateFields = { name, price, category, isAvailable, description };
-
+    let updateFields = { name, price, category, isAvailable, description, image };
     if (req.file) {
       const uploadResponse = await cloudinaryInstance.uploader.upload(
         req.file.path
       );
-      updateFields.imageUrl = uploadResponse.url;
+      updateFields.image = uploadResponse.url;
     }
-
     const menuItem = await MenuItem.findOneAndUpdate(
       { _id: menuItemId, restaurant: restaurantId },
       updateFields,
       { new: true, runValidators: true }
     );
-
     if (!menuItem) {
       return res
         .status(404)
         .json({ message: "Menu item not found in the specified restaurant." });
     }
-
     res.json(menuItem);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -137,6 +135,7 @@ exports.deleteMenuItem = async (req, res) => {
     if(!menuItemId){
       return res.status(400).json({ message: "Menu item ID is required" });
     }
+
     const deleteMenuItem = await MenuItem.findByIdAndDelete({
       _id: menuItemId,
       restaurant: restaurantId,

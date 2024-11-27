@@ -8,6 +8,7 @@ const orderSchema = new mongoose.Schema({
         price: { type: Number, required: true }
     }],
     totalAmount: { type: Number, required: true },
+    coupon: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }, 
     status: { type: String, enum: ['pending', 'confirmed', 'preparing', 'out for delivery', 'delivered', 'cancelled'], default: 'pending' },
     deliveryAddress: {
         street: String,
@@ -15,7 +16,6 @@ const orderSchema = new mongoose.Schema({
         state: String,
         zipCode: String
     },
-    coupon: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' }, 
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now }
 });
