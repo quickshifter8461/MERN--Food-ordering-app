@@ -1,6 +1,19 @@
 const Cart = require("../models/cartModel");
 const MenuItem = require("../models/menuItemModel");
 
+
+exports.getCart = async (req,res)=>{
+  try{
+    const userId = req.user.userId
+    const cart = await Cart.findOne({userId}).populate("restaurantId", "name location").populate("userId", "name")
+    if(!cart){
+      return res.status(404).json({message: "No items in cart"})
+    }
+    res.status(200).json({message: "Cart found", cart: cart})
+  }catch(error){
+    res.status(500).json({message: error.message})
+  }
+}
 // Add or update item in the cart
 exports.addItemToCart = async (req, res) => {
   try {
@@ -11,7 +24,10 @@ exports.addItemToCart = async (req, res) => {
       return res.status(404).json({ message: "Menu item not found" });
     }
     const itemPrice = menuItem.price * quantity;
-    let cart = await Cart.findOne({ userId, restaurantId });
+    let cart = await Cart.findOne({ userId});
+    if(cart && cart.restaurantId.toString() !== restaurantId){
+      return res.status(409).json({message: "Item from different restaurant is already added to cart"})
+    }
     if (!cart) {
       cart = new Cart({ userId, restaurantId , items: [], totalPrice: 0, finalPrice: 0 });
     }
@@ -35,10 +51,7 @@ exports.addItemToCart = async (req, res) => {
     );
     cart.finalPrice = cart.totalPrice; 
     await cart.save();
-    const populatedCart = await Cart.findById(cart._id).populate({
-      path: "items.foodId",
-      select: "name price",
-    }).populate({path: "userId", select: "name"}).populate("restaurantId" , "name location");
+    const populatedCart = await Cart.findById(cart._id).populate("items.foodId", "name price").populate("userId", "name").populate("restaurantId" , "name location");
     res.status(200).json({ message: "Item added to cart", cart: populatedCart });
   } catch (error) {
     console.error(error);
@@ -48,9 +61,9 @@ exports.addItemToCart = async (req, res) => {
 
 exports.removeItemFromCart = async (req, res) => {
   try {
-    const { userId } = req.user; 
+    const  userId  = req.user.userId; 
     const { foodId } = req.body;
-    const cart = await Cart.findOne({ userId });
+    const cart = await Cart.findOne({ userId }).populate("items.foodId", "name price").populate("userId", "name").populate("restaurantId", "name location");
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
     }
@@ -79,8 +92,9 @@ exports.removeItemFromCart = async (req, res) => {
 
 exports.decrementItemQuantity = async (req, res) => {
   try {
-    const { cartId, foodId } = req.body; 
-    const cart = await Cart.findById(cartId);
+    const userId = req.user.userId
+    const { foodId } = req.body; 
+    const cart = await Cart.findOne({userId}).populate("items.foodId", "name price").populate("userId", "name").populate("restaurantId", "name location");
     if (!cart) {
       return res.status(404).json({ message: "Cart not found" });
     }
@@ -104,5 +118,49 @@ exports.decrementItemQuantity = async (req, res) => {
   } catch (error) {
     console.error("Error updating item quantity:", error);
     return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+exports.incrementItemQuantity = async (req, res) => {
+  try {
+    const userId = req.user.userId; 
+    const foodId = req.body.foodId; 
+    const cart = await Cart.findOne({ userId })
+      .populate("items.foodId", "name price")
+      .populate("userId", "name")
+      .populate("restaurantId", "name location");
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+    const itemIndex = cart.items.findIndex(
+      (item) => item.foodId._id.toString() === foodId
+    );
+
+    if (itemIndex === -1) {
+      return res.status(404).json({ message: "Item not found in cart" });
+    }
+    const item = cart.items[itemIndex];
+    item.quantity += 1;
+    item.totalItemPrice += item.foodId.price;
+    cart.totalPrice += item.foodId.price;
+    cart.finalPrice = cart.totalPrice;
+    await cart.save();
+    res.status(200).json({ message: "Item quantity incremented", cart });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+exports.deleteCart = async (req,res)=>{
+  try{
+    const userId = req.user.userId
+    const cart = await Cart.findOneAndDelete({userId})
+    if(!cart){
+      return res.status(404).send({message: "Cart not found"})
+    }
+    res.status(200).send({message: "Cart deleted"})
+  }catch(error){
+    res.status(500).send({message: error.message})
   }
 }
