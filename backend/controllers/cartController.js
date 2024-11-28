@@ -39,7 +39,6 @@ exports.addItemToCart = async (req, res) => {
         restaurantId,
         items: [],
         totalPrice: 0,
-        finalPrice: 0,
       });
     }
     const existingItemIndex = cart.items.findIndex(
@@ -60,7 +59,6 @@ exports.addItemToCart = async (req, res) => {
       (sum, item) => sum + item.totalItemPrice,
       0
     );
-    cart.finalPrice = cart.totalPrice;
     await cart.save();
     const populatedCart = await Cart.findById(cart._id)
       .populate("items.foodId", "name price")
@@ -87,16 +85,18 @@ exports.removeItemFromCart = async (req, res) => {
       return res.status(404).json({ message: "Cart not found" });
     }
     const itemIndex = cart.items.findIndex(
-      (item) => item.foodId.toString() === foodId
+      (item) => item.foodId._id.toString() === foodId
     );
-
     if (itemIndex > -1) {
       cart.items.splice(itemIndex, 1);
       cart.totalPrice = cart.items.reduce(
         (sum, item) => sum + item.totalItemPrice,
         0
       );
-      cart.finalPrice = cart.totalPrice;
+      if (cart.items.length === 0) {
+        await Cart.findOneAndDelete({ userId });
+        return res.status(200).json({ message: "Cart is now empty and deleted" });
+      }
       await cart.save();
       res.status(200).json({ message: "Item removed from cart", cart });
     } else {
@@ -145,7 +145,6 @@ exports.updateItemQuantity = async (req, res) => {
         cart.items.splice(itemIndex, 1);
       }
     }
-    cart.finalPrice = cart.totalPrice;
     await cart.save();
     return res.status(200).json({ message: "Item quantity updated", cart });
   } catch (error) {

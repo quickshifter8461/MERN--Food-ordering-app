@@ -5,8 +5,9 @@ const { PORT, connectDB } = require("./config/db");
 const authRoutes = require("./routes/auth");
 const restaurantRoutes = require("./routes/restaurant");
 const authMiddleware = require("./middlewares/authMiddleware");
-const cartRoutes = require("./routes/cartRouter")
-const couponRoutes = require("./routes/couponRoutes")
+const cartRoutes = require("./routes/cartRoutes");
+const couponRoutes = require("./routes/couponRoutes");
+const orderRoutes = require("./routes/orderRoutes")
 
 const app = express();
 
@@ -15,12 +16,13 @@ connectDB();
 app.use(cors());
 
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/restaurants", authMiddleware, restaurantRoutes);
-app.use("/api/cart",authMiddleware, cartRoutes)
-app.use("/api/coupon",authMiddleware, couponRoutes)
+app.use("/api/cart", authMiddleware, cartRoutes);
+app.use("/api/coupon", authMiddleware, couponRoutes);
+app.use("/api/order",authMiddleware,orderRoutes)
 app.get("/", (req, res) => {
   res.send("API running...");
 });

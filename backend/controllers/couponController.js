@@ -30,36 +30,6 @@ exports.getCoupons = async (req,res) =>{
     }
 }
 
-exports.applyCoupon = async (req,res) =>{
-    try{
-        const{code, orderValue} = req.body
-        if(!code || !orderValue){
-            return res.status(400).json({ message: "Coupon code and order value are required." });
-        }
-        const coupon = await Coupon.findOne({code})
-        if(!coupon){
-            return res.status(404).json({message: "Invalid coupon code"})
-        }
-        if(!coupon.isActive){
-            return res.status(400).json({ message: "This coupon is no longer active." });
-        }
-        const appliedDate = new Date()
-        if(appliedDate > coupon.expiryDate){
-            return res.status(400).json({ message: "This coupon has expired." });
-        }
-        if(orderValue< coupon.minOrderValue){
-            return res.status(400).json({
-                message: `Order value must be at least ${coupon.minOrderValue} to apply this coupon.`,
-              }); 
-        }
-        const couponDiscount = Math.min((orderValue*coupon.discountPercentage)/100, coupon.maxDiscountValue)
-        const finalPrice = orderValue-couponDiscount
-        res.status(200).json({message:"Coupon applied successfully", couponDiscount, finalPrice})
-    }catch(error){
-        res.status(500).json({message: error.message})
-    }
-}
-
 exports.updateCoupon = async (req,res) =>{
     try{
         const {id} = req.params

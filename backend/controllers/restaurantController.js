@@ -73,34 +73,23 @@ exports.getRestaurantByName = async (req,res)=>{
 } 
 exports.updateRestaurant = async (req, res) => {
   try {
-    // Fetch the restaurant by ID
     const restaurant = await Restaurant.findById(req.params.restaurantId);
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
-
-    // Check if the user is authorized to update
     if (restaurant.owner.toString() !== req.user.userId) {
       return res.status(403).json({ message: "Unauthorized action" });
     }
-
-    // Handle image update if `req.file` exists
     if (req.file) {
       const imageUploadResult = await cloudinaryInstance.uploader.upload(req.file.path);
       restaurant.image = imageUploadResult.url;
     }
-
-    // Destructure other fields from `req.body`
     const { name, address, description, contact, status } = req.body;
-
-    // Update only provided fields
     if (name) restaurant.name = name;
     if (address) restaurant.address = address;
     if (description) restaurant.description = description;
     if (contact) restaurant.contact = contact;
     if (status) restaurant.status = status;
-
-    // Save the updated restaurant
     await restaurant.save();
 
     res.status(200).json({

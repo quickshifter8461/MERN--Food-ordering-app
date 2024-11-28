@@ -38,12 +38,6 @@ const cartSchema = new mongoose.Schema(
       min: 0,
       default: 0,
     },
-    finalPrice: {
-      type: Number,
-      required: true,
-      min: 0,
-      default: 0,
-    },
   },
   { timestamps: true }
 );

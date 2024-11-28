@@ -56,7 +56,7 @@ exports.getMenuItemsByRestaurant = async (req, res) => {
     if (!restaurant) {
       return res.status(400).json({ message: "No restaurant found" });
     }
-    const menuItems = await MenuItem.find({ restaurant: restaurantId });
+    const menuItems = await MenuItem.find({ restaurant: restaurantId }).populate("restaurant", "name");
     res.status(200).json(menuItems);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -68,7 +68,7 @@ exports.searchMenuOfRestaurant = async (req,res)=>{
     const menuItems = await MenuItem.find({
       restaurant: req.params.restaurantId,
       name: { $regex: req.params.name, $options: "i" },
-    })
+    }).populate("restaurant", "name")
     res.status(200).json(menuItems)
   }catch(error){
     res.status(500).json({ message: error.message });
@@ -78,7 +78,7 @@ exports.searchMenuOfRestaurant = async (req,res)=>{
 exports.searchMenuItemsByName = async (req,res)=>{
   try {
     const name = req.params.name
-    const menuItems = await MenuItem.find({name: {$regex: name, $options:'i'}})
+    const menuItems = await MenuItem.find({name: {$regex: name, $options:'i'}}).populate("restaurant", "name")
     res.status(200).json(menuItems)
   } catch (error) {
     res.status(500).json({message: error.message})
@@ -91,7 +91,7 @@ exports.getMenuItemById = async (req, res) =>{
     const menuItemId =  req.params.menuItemId
     const menuItem = await MenuItem.findById({restaurant: restaurantId,
       _id: menuItemId
-    })
+    }).populate("restaurant", "name")
     if(!menuItem){
       return res.status(404).json({message: "Item not found"})
     }
