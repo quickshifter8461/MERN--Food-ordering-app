@@ -2,7 +2,6 @@ const Cart = require("../models/cartModel");
 const Coupon = require("../models/couponModel");
 const Order = require("../models/orderModel");
 const ORDER_STATUS = [
-    "pending",
     "confirmed",
     "preparing",
     "out for delivery",
@@ -79,6 +78,9 @@ exports.updateOrderUser = async (req,res)=>{
       const cartId = order.cartId
       if(order.status === "confirmed"){
         await Cart.findOneAndUpdate({_id:cartId} , {cartStatus: "ordered"}, {new: true})
+      }
+      if(order.status === "pending"){
+        return res.status(400).json({ message: "Order is not confirmed" });
       }
       if (!order) {
         return res.status(404).json({ message: "Order not found." });

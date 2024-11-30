@@ -8,7 +8,7 @@ const authMiddleware = require("./middlewares/authMiddleware");
 const cartRoutes = require("./routes/cartRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-const reviewRoutes = require("./routes/reviewRoutes")
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
 
@@ -18,13 +18,12 @@ app.use(cors());
 
 app.use(express.json());
 app.use(cookieParser());
-
 app.use("/api/auth", authRoutes);
 app.use("/api/restaurants", authMiddleware, restaurantRoutes);
 app.use("/api/cart", authMiddleware, cartRoutes);
 app.use("/api/coupon", authMiddleware, couponRoutes);
 app.use("/api/order", authMiddleware, orderRoutes);
-app.use("/api/review",authMiddleware, reviewRoutes)
+app.use("/api/review", authMiddleware, reviewRoutes);
 app.get("/", (req, res) => {
   res.send("API running...");
 });
