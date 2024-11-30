@@ -19,8 +19,8 @@ exports.createOrder = async (req, res) => {
             coupon,
             deliveryAddress,
         } = req.body;
-        let order = await Order.findOne({user})
-        if (!order || order.status !== "pending") {
+        let order = await Order.findOne({user:user, status:"pending"})
+        if (!order) {
             order = new Order({
               user,
               restaurant,
@@ -44,6 +44,7 @@ exports.updateOrderUser = async (req,res)=>{
         const orderId = req.params.orderId
         const{coupon, status, deliveryAddress} = req.body
         const order = await Order.findById(orderId)
+        const cartId = order.cartId
         if(!order){
             return res.status(404).json({message: "No order found"})
         }
@@ -56,6 +57,9 @@ exports.updateOrderUser = async (req,res)=>{
             if(status){
                 if(status === "cancelled"){
                     order.status = "cancelled"
+                    await order.save()
+                    await Cart.findOneAndUpdate({_id:cartId} , {cartStatus: "cancelled"}, {new: true})
+                    return res.status(200).json({message: "Order cancelled"})
                 }else {
                     return res.status(400).json({ message: "Users are only allowed to cancel orders." });
                 }
@@ -72,6 +76,10 @@ exports.updateOrderUser = async (req,res)=>{
     try {
       const { orderId } = req.params;
       const order = await Order.findById(orderId);
+      const cartId = order.cartId
+      if(order.status === "confirmed"){
+        await Cart.findOneAndUpdate({_id:cartId} , {cartStatus: "ordered"}, {new: true})
+      }
       if (!order) {
         return res.status(404).json({ message: "Order not found." });
       }

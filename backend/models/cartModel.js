@@ -7,10 +7,15 @@ const cartSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    restaurantId:{
+    restaurantId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Restaurant",
-      required:true
+      required: true,
+    },
+    cartStatus: {
+      type: String,
+      enum: ["ordering", "ordered", "cancelled"],
+      default: "ordering"
     },
     items: [
       {
