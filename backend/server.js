@@ -10,6 +10,8 @@ const couponRoutes = require("./routes/couponRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const morgan = require('morgan');
+const dotenv= require('dotenv')
+dotenv.config()
 
 const app = express();
 app.use(morgan('short')); 
@@ -17,7 +19,7 @@ connectDB();
 
 app.use(cors(
   {
-    origin:'https://carve-food-app.vercel.app/',
+    origin: process.env.CLIENT_URL,
     credentials:true,
     methods:['GET', 'POST','PUT','PATCH','DELETE'],
   }
