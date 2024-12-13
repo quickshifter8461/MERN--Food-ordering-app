@@ -76,7 +76,7 @@ exports.login = async (req, res) => {
       // { expiresIn: "1h" }
     );
     res.cookie("authToken", token, {
-      httpOnly: process.env.NODE_ENV === "production",
+      httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "none",
       // maxAge: 60 * 60 * 1000,
