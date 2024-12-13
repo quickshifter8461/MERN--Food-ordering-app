@@ -16,7 +16,7 @@ connectDB();
 
 app.use(cors(
   {
-    origin:'https://crave-bp8ur0kqc-vishnus-projects-a7cb57fe.vercel.app/',
+    origin:'https://carve-food-app.vercel.app/',
     credentials:true,
     methods:['GET', 'POST','PUT','PATCH','DELETE'],
   }
