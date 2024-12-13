@@ -3,7 +3,7 @@ const addressSchema = new mongoose.Schema({
   user: { type: mongoose.Types.ObjectId, ref: "User", required: true },
   name: {
     type: String,
-    enum: ['home', 'Office', 'others'],
+    enum: ['Home', 'Office', 'Other'],
     default: 'home',
     required: true,
     trim: true,
