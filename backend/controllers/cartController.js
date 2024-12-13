@@ -4,12 +4,12 @@ const MenuItem = require("../models/menuItemModel");
 exports.getCart = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const cart = await Cart.find({ userId })
+    const cart = await Cart.findOne({ userId: userId, cartStatus: "ordering" })
       .populate("restaurantId", "name location")
       .populate("userId", "name")
-      .populate('items.foodId')
+      .populate("items.foodId");
     if (!cart) {
-      return res.status(404).json({ message: "No items in cart" });
+      return res.status(404).json({ message: "Cart not found" });
     }
     res.status(200).json({ message: "Cart found", cart: cart });
   } catch (error) {
@@ -26,7 +26,7 @@ exports.addItemToCart = async (req, res) => {
       return res.status(404).json({ message: "Menu item not found" });
     }
     const itemPrice = menuItem.price * quantity;
-    let cart = await Cart.findOne({ userId:userId, cartStatus:"ordering" });
+    let cart = await Cart.findOne({ userId: userId, cartStatus: "ordering" });
     if (cart && cart.restaurantId.toString() !== restaurantId) {
       return res.status(409).json({
         message: "Item from different restaurant is already added to cart",
@@ -78,7 +78,7 @@ exports.removeItemFromCart = async (req, res) => {
     const userId = req.user.userId;
     const { foodId } = req.body;
     const cart = await Cart.findOne({ userId: userId, cartStatus: "ordering" })
-      .populate("items.foodId", "name price")
+      .populate("items.foodId")
       .populate("userId", "name")
       .populate("restaurantId", "name location");
     if (!cart) {
@@ -150,9 +150,7 @@ exports.updateItemQuantity = async (req, res) => {
     }
     if (cart.items.length === 0) {
       await Cart.findOneAndDelete({ userId: userId, cartStatus: "ordering" });
-      return res
-        .status(200)
-        .json({ message: "Cart is now empty and deleted" });
+      return res.status(200).json({ message: "Cart is now empty and deleted" });
     }
     await cart.save();
     return res.status(200).json({ message: "Item quantity updated", cart });

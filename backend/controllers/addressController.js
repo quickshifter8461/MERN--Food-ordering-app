@@ -4,15 +4,6 @@ exports.addAddress = async (req, res) => {
   try {
     const { street, city, state, postalCode, name } = req.body;
     const user = await User.findById(req.user.userId)
-    const addressExists = await Address.findOne({ 
-      user: req.user.userId,
-      name: name
-    });
-    if (addressExists) {
-      return res
-        .status(400)
-        .json({ message: `Address in this name already Exist Name: ${name}` });
-    }
     const address = new Address({
       street,
       city,
