@@ -9,9 +9,10 @@ const cartRoutes = require("./routes/cartRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const morgan = require('morgan');
 
 const app = express();
-
+app.use(morgan('short')); 
 connectDB();
 
 app.use(cors(
