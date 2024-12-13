@@ -14,12 +14,18 @@ const app = express();
 
 connectDB();
 
-app.use(cors());
+app.use(cors(
+  {
+    origin:'https://crave-bp8ur0kqc-vishnus-projects-a7cb57fe.vercel.app/',
+    credentials:true,
+    methods:['GET', 'POST','PUT','PATCH','DELETE'],
+  }
+));
 
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
-app.use("/api/restaurants", authMiddleware, restaurantRoutes);
+app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/cart", authMiddleware, cartRoutes);
 app.use("/api/coupon", authMiddleware, couponRoutes);
 app.use("/api/order", authMiddleware, orderRoutes);

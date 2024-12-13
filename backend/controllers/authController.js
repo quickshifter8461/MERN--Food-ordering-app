@@ -1,28 +1,58 @@
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const cloudinaryInstance = require('../config/cloudinary')
+const cloudinaryInstance = require("../config/cloudinary");
 
 exports.signup = async (req, res) => {
   try {
     const { name, email, password, role, profilePic, phone } = req.body;
+
+    // Check if the required fields are present
     if (!name || !email || !password || !phone) {
       return res.status(400).json({ message: "All fields are required" });
     }
+
+    // Check if the email already exists
     let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ message: "User already exists" });
+    if (user)
+      return res
+        .status(400)
+        .json({ message: "User already exists with this email" });
+
+    // Check if the phone number already exists
+    let phoneExists = await User.findOne({ phone });
+    if (phoneExists)
+      return res
+        .status(400)
+        .json({ message: "User already exists with this phone number" });
+
     let imageUrl =
       "https://cdn.prod.website-files.com/5f46c318c843828732a6f8e2/66b4beb879a502df90390196_digital-menu-board-free-templates.webp";
+
     if (req.file) {
       const uploadResponse = await cloudinaryInstance.uploader.upload(
         req.file.path
       );
       imageUrl = uploadResponse.url;
     }
+
+    // Encrypt password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    user = new User({ name, email, password: hashedPassword, role, phone, profilePic:imageUrl });
+
+    // Create a new user object
+    user = new User({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+      phone,
+      profilePic: imageUrl,
+    });
+
+    // Save the user to the database
     await user.save();
+
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -43,16 +73,17 @@ exports.login = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      // { expiresIn: "1h" }
     );
     res.cookie("authToken", token, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 60 * 60 * 1000,
+      // maxAge: 60 * 60 * 1000,
     });
     res.json({ message: "Login successful" });
   } catch (error) {
+    
     res.status(500).json({ message: error.message });
   }
 };
@@ -88,7 +119,9 @@ exports.changePassword = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).populate("address","name").select("-password");
+    const user = await User.findById(req.user.userId)
+      .populate("address", "name")
+      .select("-password");
     res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -96,46 +129,49 @@ exports.getProfile = async (req, res) => {
 };
 
 exports.updateProfile = async (req, res) => {
-    try {
-      const { name, email, phone } = req.body;
-      if (!name && !email && !phone && !req.file) {
-        return res
-          .status(400)
-          .json({ message: "At least one field must be updated" });
-      }
-      const updates = {};
-      if (name) updates.name = name;
-      if (email) updates.email = email;
-      if (phone) updates.phone = phone;
-      if (req.file) {
-        try {
-          const imageUploadResult = await cloudinaryInstance.uploader.upload(
-            req.file.path
-          );
-          updates.profilePic = imageUploadResult.url;
-        } catch (err) {
-          return res
-            .status(500)
-            .json({ message: "Failed to upload profile picture", error: err.message });
-        }
-      }
-      const updatedProfile = await User.findByIdAndUpdate(
-        req.user.userId,
-        { $set: updates },
-        { new: true }
-      ).select("-password");
-      if (!updatedProfile) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.status(200).json({
-        message: "User profile updated successfully",
-        updatedProfile,
-      });
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+  try {
+    const { name, email, phone } = req.body;
+    if (!name && !email && !phone && !req.file) {
+      return res
+        .status(400)
+        .json({ message: "At least one field must be updated" });
     }
-  };
-  
+    const updates = {};
+    if (name) updates.name = name;
+    if (email) updates.email = email;
+    if (phone) updates.phone = phone;
+    if (req.file) {
+      try {
+        const imageUploadResult = await cloudinaryInstance.uploader.upload(
+          req.file.path
+        );
+        updates.profilePic = imageUploadResult.url;
+      } catch (err) {
+        return res
+          .status(500)
+          .json({
+            message: "Failed to upload profile picture",
+            error: err.message,
+          });
+      }
+    }
+    const updatedProfile = await User.findByIdAndUpdate(
+      req.user.userId,
+      { $set: updates },
+      { new: true }
+    ).select("-password");
+    if (!updatedProfile) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({
+      message: "User profile updated successfully",
+      updatedProfile,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.deleteProfile = async (req, res, next) => {
   try {
     const deleteUser = await User.findByIdAndDelete(req.user.userId);
@@ -145,5 +181,15 @@ exports.deleteProfile = async (req, res, next) => {
     res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+//Logout
+exports.logout = (req,res)=> {
+  try{
+      res.clearCookie("authToken");
+      res.status(200).json({message:"Logout Successfully"});
+  }catch(error){
+      res.status(500).json({message:error.message});
   }
 };

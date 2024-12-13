@@ -6,7 +6,8 @@ exports.getCart = async (req, res) => {
     const userId = req.user.userId;
     const cart = await Cart.find({ userId })
       .populate("restaurantId", "name location")
-      .populate("userId", "name");
+      .populate("userId", "name")
+      .populate('items.foodId')
     if (!cart) {
       return res.status(404).json({ message: "No items in cart" });
     }
@@ -119,7 +120,7 @@ exports.updateItemQuantity = async (req, res) => {
         .json({ message: "Invalid action. Use 'increment' or 'decrement'." });
     }
     const cart = await Cart.findOne({ userId: userId, cartStatus: "ordering" })
-      .populate("items.foodId", "name price")
+      .populate("items.foodId")
       .populate("userId", "name")
       .populate("restaurantId", "name location");
 
@@ -146,6 +147,12 @@ exports.updateItemQuantity = async (req, res) => {
         cart.totalPrice -= item.totalItemPrice;
         cart.items.splice(itemIndex, 1);
       }
+    }
+    if (cart.items.length === 0) {
+      await Cart.findOneAndDelete({ userId: userId, cartStatus: "ordering" });
+      return res
+        .status(200)
+        .json({ message: "Cart is now empty and deleted" });
     }
     await cart.save();
     return res.status(200).json({ message: "Item quantity updated", cart });

@@ -38,7 +38,7 @@ exports.createRestaurant = async (req, res) => {
 
 exports.getRestaurants = async (req, res) => {
   try {
-    const restaurants = await Restaurant.find().populate('owner',"name").populate('menuItems','name');
+    const restaurants = await Restaurant.find().populate('owner',"name").populate('menuItems');
     if(restaurants.length===0){
       return res.status(404).json({message: "No restaurants Found"})
     }
@@ -50,7 +50,7 @@ exports.getRestaurants = async (req, res) => {
 
 exports.getRestaurantById = async (req, res) => {
   try {
-    const restaurant = await Restaurant.findById(req.params.restaurantId).populate('menuItems',"name");
+    const restaurant = await Restaurant.findById(req.params.restaurantId).populate('menuItems');
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
@@ -63,7 +63,7 @@ exports.getRestaurantById = async (req, res) => {
 exports.getRestaurantByName = async (req,res)=>{
   try{
     const name = req.params.name;
-    const restaurant = await Restaurant.find({ name: { $regex: name, $options: "i" } }).populate('menuItems',"name");
+    const restaurant = await Restaurant.find({ name: { $regex: name, $options: "i" } }).populate('menuItems');
     if (!restaurant)
       return res.status(404).json({ message: "Restaurant not found" });
     res.json(restaurant);
