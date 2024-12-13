@@ -72,18 +72,17 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     const token = jwt.sign(
       { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET
       // { expiresIn: "1h" }
     );
     res.cookie("authToken", token, {
-      httpOnly: false,
+      httpOnly: process.env.NODE_ENV === "production",
       secure: process.env.NODE_ENV === "production",
-      sameSite: "none",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       // maxAge: 60 * 60 * 1000,
     });
     res.json({ message: "Login successful" });
   } catch (error) {
-    
     res.status(500).json({ message: error.message });
   }
 };
@@ -147,12 +146,10 @@ exports.updateProfile = async (req, res) => {
         );
         updates.profilePic = imageUploadResult.url;
       } catch (err) {
-        return res
-          .status(500)
-          .json({
-            message: "Failed to upload profile picture",
-            error: err.message,
-          });
+        return res.status(500).json({
+          message: "Failed to upload profile picture",
+          error: err.message,
+        });
       }
     }
     const updatedProfile = await User.findByIdAndUpdate(
@@ -185,11 +182,11 @@ exports.deleteProfile = async (req, res, next) => {
 };
 
 //Logout
-exports.logout = (req,res)=> {
-  try{
-      res.clearCookie("authToken");
-      res.status(200).json({message:"Logout Successfully"});
-  }catch(error){
-      res.status(500).json({message:error.message});
+exports.logout = (req, res) => {
+  try {
+    res.clearCookie("authToken");
+    res.status(200).json({ message: "Logout Successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
