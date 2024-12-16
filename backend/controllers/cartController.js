@@ -61,7 +61,7 @@ exports.addItemToCart = async (req, res) => {
     );
     await cart.save();
     const populatedCart = await Cart.findById(cart._id)
-      .populate("items.foodId", "name price")
+      .populate("items.foodId")
       .populate("userId", "name")
       .populate("restaurantId", "name location");
     res

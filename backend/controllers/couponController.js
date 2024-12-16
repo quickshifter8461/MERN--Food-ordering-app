@@ -18,6 +18,41 @@ exports.createCoupon = async (req,res)=>{
     }
 }
 
+exports.applyCoupon = async (req, res) => {
+    try {
+        const { code, orderValue } = req.body;
+        if (!code || !orderValue) {
+            return res.status(400).json({ message: "Coupon code and order value are required" });
+        }
+        const coupon = await Coupon.findOne({ code });
+        if (!coupon) {
+            return res.status(404).json({ message: "Coupon not found" });
+        }
+        const currentDate = new Date();
+        if (new Date(coupon.expiryDate) < currentDate) {
+            return res.status(400).json({ message: "Coupon has expired" });
+        }
+        if (orderValue < coupon.minOrderValue) {
+            return res.status(400).json({ 
+                message: `Order value must be at least ${coupon.minOrderValue} to use this coupon`
+            });
+        }
+        const discount = Math.min(
+            (orderValue * coupon.discountPercentage) / 100,
+            coupon.maxDiscountValue
+        );
+        const finalPrice = orderValue - discount;
+        res.status(200).json({
+            message: "Coupon applied successfully",
+            discount,
+            finalPrice
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
 exports.getCoupons = async (req,res) =>{
     try{
         const coupons = await Coupon.find()
