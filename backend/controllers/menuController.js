@@ -78,7 +78,7 @@ exports.searchMenuOfRestaurant = async (req,res)=>{
 exports.searchMenuItemsByName = async (req,res)=>{
   try {
     const name = req.params.name
-    const menuItems = await MenuItem.find({name: {$regex: name, $options:'i'}}).populate("restaurant", "name")
+    const menuItems = await MenuItem.find({name: {$regex: name, $options:'i'}}).populate("restaurant").populate('customerReviews')
     res.status(200).json(menuItems)
   } catch (error) {
     res.status(500).json({message: error.message})
