@@ -13,23 +13,25 @@ exports.createOrder = async (req, res) => {
     const user = req.user.userId;
     const { restaurant, cartId, coupon, deliveryAddress } = req.body;
     let order = await Order.findOne({ user: user, status: "pending" });
-    if (!order) {
+    if (order) {
+      order.restaurant = restaurant || order.restaurant;
+      order.cartId = cartId || order.cartId;
+      order.coupon = coupon === undefined || coupon === "" ? null : coupon;
+      order.deliveryAddress = deliveryAddress || order.deliveryAddress;
+    } else {
       order = new Order({
         user,
         restaurant,
         cartId,
-        coupon,
+        coupon: coupon || null,
         deliveryAddress,
       });
-    } else {
-      return res
-        .status(400)
-        .json({ message: "An order is already in pending status" });
     }
     await order.save();
+
     res
       .status(201)
-      .json({ message: "Order created successfully", order: order });
+      .json({ message: "Order created or updated successfully", order: order });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
