@@ -77,9 +77,6 @@ exports.updateRestaurant = async (req, res) => {
     if (!restaurant) {
       return res.status(404).json({ message: "Restaurant not found" });
     }
-    if (restaurant.owner.toString() !== req.user.userId) {
-      return res.status(403).json({ message: "Unauthorized action" });
-    }
     if (req.file) {
       const imageUploadResult = await cloudinaryInstance.uploader.upload(req.file.path);
       restaurant.image = imageUploadResult.url;

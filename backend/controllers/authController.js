@@ -72,8 +72,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     const token = jwt.sign(
       { userId: user._id, role: user.role },
-      process.env.JWT_SECRET
-      // { expiresIn: "1h" }
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" }
     );
     res.cookie("authToken", token, {
       httpOnly: process.env.NODE_ENV === "production",
@@ -81,7 +81,7 @@ exports.login = async (req, res) => {
       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       // maxAge: 60 * 60 * 1000,
     });
-    res.json({ message: "Login successful" });
+    res.json({ message: "Login successful", user });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -34,8 +34,8 @@ router.get('/:restaurantId/:menuItemId',getMenuItemById);
 router.get('/:restaurantId/menu/:name',searchMenuOfRestaurant);
 router.get('/menu/:name/search',searchMenuItemsByName)
 
-router.put('/:restaurantId', authMiddleware, roleMiddleware(['admin','restaurant manager']),upload.single("image"), updateRestaurant);
-router.put('/menuitems/:restaurantId/:menuItemId',authMiddleware, roleMiddleware(["admin","restaurant manager"]),upload.single("image"), updateMenuItem);
+router.put('/:restaurantId', authMiddleware, roleMiddleware(['admin']),upload.single("image"), updateRestaurant);
+router.put('/menuitems/:restaurantId/:menuItemId',authMiddleware, roleMiddleware(["admin"]),upload.single("image"), updateMenuItem);
 
 router.delete('/:restaurantId', authMiddleware, roleMiddleware(['admin']), deleteRestaurant);
 router.delete('/menuitems/:restaurantId/:menuItemId', authMiddleware, roleMiddleware(['admin','restaurant manager']), deleteMenuItem)

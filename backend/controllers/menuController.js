@@ -104,7 +104,7 @@ exports.getMenuItemById = async (req, res) =>{
 exports.updateMenuItem = async (req, res) => {
   try {
     const { menuItemId, restaurantId } = req.params;
-    const { name, price, category, isAvailable, description } = req.body;
+    const { name, price, category, isAvailable, description, image } = req.body;
     let updateFields = { name, price, category, isAvailable, description, image };
     if (req.file) {
       const uploadResponse = await cloudinaryInstance.uploader.upload(

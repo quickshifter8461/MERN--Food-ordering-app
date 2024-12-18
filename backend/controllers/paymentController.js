@@ -92,9 +92,6 @@ exports.verifyPayment = async (req, res) => {
           { cartStatus: "ordered" },
           { new: true }
         );
-      console.log(cart);
-      console.log(order)
-      console.log(payment.orderId)
       return res.status(200).json({ message: "Payment is successful" });
 
     } else {
@@ -108,3 +105,11 @@ exports.verifyPayment = async (req, res) => {
 };
 
 
+exports.getPaymentsOfAllUsers = async (req, res)=>{
+  try{
+    const payments = await Payment.find({status: 'success'})
+    res.status(200).json({ message: "Payments found successfully", payments});
+  }catch(error){
+    res.status(500).json({ message: error.message })
+  }
+}

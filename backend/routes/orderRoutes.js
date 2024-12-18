@@ -1,7 +1,7 @@
 const express = require("express")
 const roleMiddleware = require("../middlewares/roleMiddleware");
 const { createOrder, updateOrderUser, updateOrderStatus, getAllOrders, getAllRestaurantOrders, getOrderById } = require("../controllers/orderController");
-const { createPayment, verifyPayment, getAllPayments } = require("../controllers/paymentController");
+const { createPayment, verifyPayment, getAllPayments, getPaymentsOfAllUsers } = require("../controllers/paymentController");
 const router = express.Router();
 
 
@@ -15,5 +15,6 @@ router.patch('/update-order-status/:orderId',roleMiddleware(["admin", "restauran
 router.post('/:orderId/create-payment',roleMiddleware(["user"]),createPayment)
 router.get('/all-payments', getAllPayments)
 router.post('/verify-payment',verifyPayment)
+router.get('/admin/get-all-payments',roleMiddleware(["admin"]), getPaymentsOfAllUsers)
 
 module.exports = router
