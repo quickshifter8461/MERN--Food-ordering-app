@@ -3,9 +3,9 @@ const {
   createRestaurant,
   getRestaurants,
   getRestaurantById,
-  getRestaurantByName,
   updateRestaurant,
   deleteRestaurant,
+  searchCombined,
 } = require('../controllers/restaurantController');
 const {
   createMenuItem,
@@ -28,11 +28,11 @@ router.post('/:restaurantId/addMenu', authMiddleware, roleMiddleware(['admin','r
 
 router.get('/all-restaurants', getRestaurants);
 router.get('/:restaurantId', getRestaurantById);
-router.get('/restaurant/:name', getRestaurantByName);
 router.get('/:restaurantId/menu',getMenuItemsByRestaurant);
 router.get('/:restaurantId/:menuItemId',getMenuItemById);
 router.get('/:restaurantId/menu/:name',searchMenuOfRestaurant);
 router.get('/menu/:name/search',searchMenuItemsByName)
+router.get('/search/combined/:name', searchCombined)
 
 router.put('/:restaurantId', authMiddleware, roleMiddleware(['admin']),upload.single("image"), updateRestaurant);
 router.put('/menuitems/:restaurantId/:menuItemId',authMiddleware, roleMiddleware(["admin"]),upload.single("image"), updateMenuItem);

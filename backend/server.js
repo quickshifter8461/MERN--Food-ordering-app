@@ -9,22 +9,17 @@ const cartRoutes = require("./routes/cartRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
-const morgan = require('morgan');
-const dotenv= require('dotenv')
-dotenv.config()
+const morgan = require("morgan");
+const dotenv = require("dotenv");
+const corsConfig = require("./config/corsConfig");
+
+dotenv.config();
 
 const app = express();
-app.use(morgan('short')); 
+app.use(morgan("short"));
 connectDB();
 
-app.use(cors(
-  {
-    origin: [process.env.CLIENT_URL,process.env.ADMIN_URL],
-    credentials:true,
-    methods:['GET', 'POST','PUT','PATCH','DELETE','OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'], 
-  }
-));
+app.use(corsConfig);
 
 app.use(express.json());
 app.use(cookieParser());
