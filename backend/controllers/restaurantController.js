@@ -63,8 +63,10 @@ exports.getRestaurantById = async (req, res) => {
 exports.searchCombined = async (req, res) => {
   try{
 
-    const restaurant = await Restaurant.find({ name: { $regex: req.params.name, $options: "i" }});
-    const menuItem = await MenuItem.find({ name: { $regex: req.params.name, $options: "i" }}); 
+    const restaurant = await Restaurant.find({ name: { $regex: req.params.name, $options: "i" }})
+    .populate('menuItems');
+    const menuItem = await MenuItem.find({ name: { $regex: req.params.name, $options: "i" }})
+    .populate('restaurant'); 
     if (!restaurant &&!menuItem) {
       return res.status(404).json({ message: "Restaurant or menu item not found" });
     }
