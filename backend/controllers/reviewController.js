@@ -137,3 +137,13 @@ exports.getAllRestaurantReview = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+exports.getAllReviewsOfUser = async (req, res)=>{
+  try {
+    const userId = req.user.userId
+    const reviews = await Review.find({ user: userId })
+    res.status(200).json({ message: "Reviews fetched successfully", reviews });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
