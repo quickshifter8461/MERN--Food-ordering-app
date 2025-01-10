@@ -9,6 +9,7 @@ const cartRoutes = require("./routes/cartRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
 const corsConfig = require("./config/corsConfig");
@@ -29,6 +30,7 @@ app.use("/api/cart", authMiddleware, cartRoutes);
 app.use("/api/coupon", authMiddleware, couponRoutes);
 app.use("/api/order", authMiddleware, orderRoutes);
 app.use("/api/review", authMiddleware, reviewRoutes);
+app.use("/api/admin", authMiddleware, adminRoutes);
 app.get("/", (req, res) => {
   res.send("API running...");
 });
